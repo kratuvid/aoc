@@ -6,7 +6,12 @@
 		(with-open-file (stream "inputs/1")
 		  (adjust-array input (file-length stream))
 		  (read-sequence input stream))
-		input
+		(with-input-from-string
+			(input-stream (concatenate
+						   'string
+						   (substitute #\Space #\, (string-trim (string #\Newline) input))
+						   (format nil " $")))
+		  (read-delimited-list #\$ input-stream))
 		))
 
 	;; experimentation and learning
