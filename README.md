@@ -1,2 +1,2 @@
-# aoc-2016
-In Lisp baby!
+# aoc
+A repository of any Advent of Code in any language I solved
