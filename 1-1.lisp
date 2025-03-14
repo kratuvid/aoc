@@ -2,11 +2,12 @@
 
 	;; real deal brother
 	(progn
-
-	  (with-open-file (stream "inputs/1")
-		)
-
-	  )
+	  (let ((input (make-array 0 :element-type 'character :adjustable t)))
+		(with-open-file (stream "inputs/1")
+		  (adjust-array input (file-length stream))
+		  (read-sequence input stream))
+		input
+		))
 
 	;; experimentation and learning
 	(progn
