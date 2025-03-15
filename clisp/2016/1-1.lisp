@@ -1,7 +1,40 @@
 (if t
-
 	;; real deal brother
 	(progn
+
+	  ;; Approach 1 - weird compilation error
+	  ;; (defun read-instructions (filename)
+	  ;; 	(mapcar
+	  ;; 	 (lambda (instruction) (let ((cleaned (string-trim '(#\Space) instruction)))
+	  ;; 							 (list (char cleaned 0) (parse-integer cleaned :start 1))))
+	  ;; 	 (uiop:split-string (string-trim '(#\Newline #\Tab #\Space)
+	  ;; 									 (let ((input (make-array 0 :element-type 'character :adjustable t)))
+	  ;; 									   (with-open-file (stream filename)
+	  ;; 										 (adjust-array input (file-length stream))
+	  ;; 										 (read-sequence input stream))
+	  ;; 									   input))
+	  ;; 						:separator '(#\,))))
+
+	  ;; (defun process-instruction (state instruction)
+	  ;; 	(let* ((location (first state))
+	  ;; 		   (direction (second state))
+	  ;; 		   (turn (first instruction))
+	  ;; 		   (amount (second instruction))
+	  ;; 		   (new-direction (mod (if (eql turn #\L) (1- direction) (1+ direction)) 4))
+	  ;; 		   (displacement (case new-direction
+	  ;; 						   (0 (list 0 amount))
+	  ;; 						   (1 (list amount 0))
+	  ;; 						   (2 (list 0 (- amount)))
+	  ;; 						   (3 (list (- amount) 0))))
+	  ;; 		   (new-location (mapcar #'+ location displacement)))
+	  ;; 	  (list new-location new-direction)))
+
+	  ;; (let* ((instructions (read-instructions "../../inputs/2016/1"))
+	  ;; 		 (final-state (reduce process-instruction instructions :initial-value '((0, 0) 0)))
+	  ;; 		 (final-location (first final-state)))
+	  ;; 	(format t "~%Total distance travelled was ~a" (reduce #'+ (mapcar #'abs final-location))))
+
+	  ;; Approach 2
 	  (let ((location '(0 0)) (direction 0))  ;; direction is represented like the hands of a clock, goes from 0 to 3
 		(dolist (instruction-raw (let ((input (make-array 0 :element-type 'character :adjustable t)))
 								   (with-open-file (stream "../../inputs/2016/1"
@@ -23,7 +56,9 @@
 			(setq location (mapcar #'+ location displacement))
 			(format t "~%~a ~a, ~a ~a, ~a" direction-relative amount direction displacement location)))
 		(format t "~%Total distance travelled was ~a" (reduce #'+ (mapcar #'abs location)))
-		))
+		)
+
+	  )
 
 
 	;; experimentation and learning
