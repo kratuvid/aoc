@@ -17,19 +17,44 @@
 
    (let ((current-location '(1 1)) (final-digits '()))
 	 (dolist (line (uiop:read-file-lines "../../inputs/2016/2"))
-	   ;; (format t "~%~a~%" line)
-	   ;; (format t "~%")
 	   (loop :for move :across line :do
-		 ;; (format t "~a " move)
 		 (let* ((direction (move-to-direction move))
 				(new-location (mapcar #'+ current-location direction)))
-		   ;; (format t "~%")
-		   ;; (format t "D: ~a -> ~a # " move direction)
-		   ;; (format t "L: (~a + ~a) -> ~a -> ~a # " current-location direction new-location (location-to-digit new-location))
-		   ;; (format t "#~a: (~a, ~a~a) = ~a~a" (length final-digits) move (location-to-digit current-location) current-location (location-to-digit new-location) new-location)
 		   (if (bounded? new-location) (setq current-location new-location))))
-	   ;; (format t "~%Digit: ~a" (location-to-digit current-location))
 	   (setq final-digits (append final-digits (list (location-to-digit current-location)))))
+	 (format t "~%~a is the code to unlock the door" final-digits))
+
+   (defun diagonal2? (location)
+	 (every (lambda (x) (not (equal x 0))) location)) 
+
+   (defun bounded2? (location)
+	 ;; (<= (+ (abs (first location)) (abs (second location))) 2))
+	 (every (lambda (x) (< (abs x)
+						   (if (diagonal2? location) 2 3)))
+			location))
+
+   (defun location-to-digit2 (location)
+	 (let* ((location-normalized (mapcar #'+ '(2 2) (list (first location) (+ (second location)))))
+			(index (+ (* (second location-normalized) 5) (first location-normalized))))
+	   (case index
+		 ;; first row
+		 (2 #\1)
+		 ;; second row
+		 (6 #\2) (7 #\3) (8 #\4)
+		 ;; third row
+		 (10 #\5) (11 #\6) (12 #\7) (13 #\8) (14 #\9)
+		 ;; fourth row
+		 (16 #\A) (17 #\B) (18 #\C)
+		 ;; fifth row
+		 (22 #\D) (otherwise (error "Logic error: ~a ~a" index location)))))
+
+   (let ((current-location '(-2 0)) (final-digits '()))
+	 (dolist (line (uiop:read-file-lines "../../inputs/2016/2"))
+	   (loop :for move :across line :do
+		 (let* ((direction (move-to-direction move))
+				(new-location (mapcar #'+ current-location direction)))
+		   (if (bounded2? new-location) (setq current-location new-location))))
+	   (setq final-digits (append final-digits (list (location-to-digit2 current-location)))))
 	 (format t "~%~a is the code to unlock the door" final-digits))
    )
 
