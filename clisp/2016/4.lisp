@@ -1,5 +1,6 @@
+(ql:quickload "cl-ppcre")
+
 (progn
-  (ql:quickload "cl-ppcre")
 
   (defun shift-cipher (c by)
 	(code-char (+ (mod (+ (- (char-code c) (char-code #\a)) by) 26)
@@ -61,3 +62,4 @@
 	(format t "~%Section of room where North Pole objects are kept is ~a" section-id-part2)
 	)
   )
+
