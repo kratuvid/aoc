@@ -1,14 +1,22 @@
 (progn
   (ql:quickload "cl-ppcre")
 
-  (let ((sum-part1 0))
+  (defun shift-cipher (c by)
+	(code-char (+ (mod (+ (- (char-code c) (char-code #\a)) by) 26)
+				  (char-code #\a))))
+
+  (defun shift-cipher-string (str by)
+	(map 'string (lambda (c) (if (eql c #\-) #\Space (shift-cipher c by))) str))
+
+  (let ((sum-part1 0) (section-id-part2 nil))
 	(dolist (room (uiop:read-file-lines "../../inputs/2016/4"))
 	  ;; (format t "~%~a" room)
 	  (ppcre:register-groups-bind (name section-id-str checksum) ("^([\\w-]+)-(\\d+)\\[(\\w+)\\]$" room)
 		(let ((name-clear (remove #\- name)) (section-id (parse-integer section-id-str))
 			  (forward-alist '()) (reverse-alist '()))
-		  
-		  (format t "~%~%name-clear: ~a" name-clear)
+
+		  (format t "~%~%name: ~a" name)
+		  (format t "~%name-clear: ~a" name-clear)
 		  
 		  (loop :for letter :across name-clear :do
 			(let ((cell (assoc letter forward-alist)))
@@ -40,8 +48,16 @@
 			(if (equal real-checksum checksum)
 				(incf sum-part1 section-id)))
 		  (format t "~%given checksum: ~a" checksum)
+
+		  (format t "~%section-id: ~a" section-id)
+
+		  (let ((decrypted-name (shift-cipher-string name section-id)))
+			(if (ppcre:scan "north\\s*pole\\s*object" decrypted-name)
+				(setq section-id-part2 section-id))
+			(print decrypted-name))
 		  )))
 
 	(format t "~%~%Sum of section IDs of only the real rooms is ~a" sum-part1)
+	(format t "~%Section of room where North Pole objects are kept is ~a" section-id-part2)
 	)
   )
