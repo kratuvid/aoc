@@ -1,5 +1,7 @@
 #include "utils.h"
 
+/* Strings */
+
 void trim_left(char** p_str, size_t* p_size, typeof(int(int)) *predicate) {
   char* str = *p_str;                        // inclusive
   const char* const end = *p_str + *p_size;  // exclusive
@@ -29,6 +31,57 @@ void trim(char** p_str, size_t* p_size, typeof(int(int)) *predicate) {
   trim_left(p_str, p_size, predicate);
   trim_right(p_str, p_size, predicate);
 }
+
+static char** _split_inplace_alloc = {};
+static void _split_inplace_exit_callback() {
+  FREE_AND_NULLIFY(_split_inplace_alloc, free);
+}
+
+split_t split_inplace(char* str, typeof(int(int))* predicate, bool discard_empty) {
+  if (atexit(_split_inplace_exit_callback) != 0)
+    ERROR_QUIT("split_inplace: atexit registration failed");
+
+  (void)discard_empty;
+
+  size_t length = 0;
+  char *begin = str, *at = str - 1;
+
+  do {
+    at++;
+    const char at_c = *at;
+
+    if (predicate(at_c) || at_c == '\0') {
+      if (!(at == begin && discard_empty)) {
+	length++;
+
+	const size_t new_size = sizeof(void*) * length;
+	if (!(_split_inplace_alloc = realloc(_split_inplace_alloc, new_size)))
+	  ERROR_EXPL_QUIT("split_inplace: couldn't reallocate %zu bytes", new_size);
+
+	_split_inplace_alloc[length-1] = begin;
+      }
+
+      *at = '\0';
+      begin = at + 1;
+    }
+
+    if (at_c == '\0') break;
+  } while (true);
+
+  const size_t new_size = sizeof(void*) * (length + 1);
+  if (!(_split_inplace_alloc = realloc(_split_inplace_alloc, new_size)))
+    ERROR_EXPL_QUIT("split_inplace: couldn't reallocate %zu bytes for the null terminator", new_size);
+  _split_inplace_alloc[length] = nullptr;
+
+  split_t product = {
+    .strs = _split_inplace_alloc,
+    .length = length
+  };
+  return product;
+}
+
+
+/* Files */
 
 static _input_allocs_t _get_input_allocs = {};
 static void _get_input_exit_callback() {

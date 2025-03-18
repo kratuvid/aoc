@@ -10,12 +10,20 @@
 #define ERROR_EXPL_QUIT(format, ...) { fprintf(stderr, format ": %s" "\n", __VA_ARGS__ __VA_OPT__(,) strerror(errno)); exit(1); }
 #define FREE_AND_NULLIFY(var, free_f) if (var) { free_f(var); (var) = nullptr; }
 
-// Must be null-terminated strings
-void trim_left(char** p_str, size_t* p_size, typeof(int(int)) *predicate) __attribute__((nonnull));
-void trim_right(char** p_str, size_t* p_size, typeof(int(int)) *predicate) __attribute__((nonnull));
-void trim(char** p_str, size_t* p_size, typeof(int(int)) *predicate) __attribute__((nonnull));
+/* Strings */
+typedef struct {
+  char** strs;
+  size_t length;
+} split_t;
 
-// Input
+// Must be null-terminated strings
+void trim_left(char** p_str, size_t* p_size, typeof(int(int))* predicate);
+void trim_right(char** p_str, size_t* p_size, typeof(int(int))* predicate);
+void trim(char** p_str, size_t* p_size, typeof(int(int))* predicate);
+
+split_t split_inplace(char* str, typeof(int(int))* predicate, bool discard_empty);
+
+/* Files */
 typedef struct {
   char* str;
   size_t size;
