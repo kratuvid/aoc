@@ -12,8 +12,8 @@
 
 /* Strings */
 typedef struct {
-  char** strs;
-  size_t length;
+	char** strs;
+	size_t length;
 } split_t;
 
 // Must be null-terminated strings
@@ -26,8 +26,8 @@ split_t split_inplace_c(char* str, char ch, bool discard_empty);
 
 /* Files */
 typedef struct {
-  char* str;
-  size_t size;
+	char* str;
+	size_t size;
 } input_t;
 
 input_t get_input(const char* filename);
