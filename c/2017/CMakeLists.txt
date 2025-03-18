@@ -7,6 +7,7 @@ endif()
 set(CMAKE_C_STANDARD 23)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_FLAGS "-march=native -Wall -Wextra -Wpedantic -Werror -pipe -fsanitize=address")
+# set(CMAKE_C_FLAGS "-march=native -Wall -Wextra -Wpedantic -Werror -pipe")
 
 project(aoc2017 LANGUAGES C)
 

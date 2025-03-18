@@ -22,16 +22,12 @@ void trim_right(char** p_str, size_t* p_size, typeof(int(int))* predicate);
 void trim(char** p_str, size_t* p_size, typeof(int(int))* predicate);
 
 split_t split_inplace(char* str, typeof(int(int))* predicate, bool discard_empty);
+split_t split_inplace_c(char* str, char ch, bool discard_empty);
 
 /* Files */
 typedef struct {
   char* str;
   size_t size;
 } input_t;
-
-typedef struct {
-  FILE* file;
-  char* input;
-} _input_allocs_t;
 
 input_t get_input(const char* filename);

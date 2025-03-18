@@ -32,19 +32,43 @@ void trim(char** p_str, size_t* p_size, typeof(int(int)) *predicate) {
   trim_right(p_str, p_size, predicate);
 }
 
-static char** _split_inplace_alloc = {};
-static void _split_inplace_exit_callback() {
-  FREE_AND_NULLIFY(_split_inplace_alloc, free);
+typedef struct {
+  char** strs;
+  void* next;
+} _si_alloc_node_t;
+
+static struct {
+  _si_alloc_node_t *head, *tail;
+} _si_alloc_list = {};
+
+static bool _si_exit_cb_registered = false;
+static void _split_inplace_exit_cb() {
+  _si_alloc_node_t* current = _si_alloc_list.head;
+  while (current) {
+    _si_alloc_node_t* save_next = current->next;
+    FREE_AND_NULLIFY(current->strs, free);
+    FREE_AND_NULLIFY(current, free);
+    current = save_next;
+  }
 }
 
 split_t split_inplace(char* str, typeof(int(int))* predicate, bool discard_empty) {
-  if (atexit(_split_inplace_exit_callback) != 0)
+  if (!_si_exit_cb_registered
+      && (_si_exit_cb_registered = true)
+      && atexit(_split_inplace_exit_cb) != 0)
     ERROR_QUIT("split_inplace: atexit registration failed");
-
-  (void)discard_empty;
 
   size_t length = 0;
   char *begin = str, *at = str - 1;
+
+  _si_alloc_node_t* node;
+  if (!(node = malloc(sizeof(_si_alloc_node_t))))
+    ERROR_EXPL_QUIT("split_inplace: couldn't allocate a new node");
+  memset(node, 0, sizeof(_si_alloc_node_t));
+
+  if (_si_alloc_list.tail) _si_alloc_list.tail->next = node;
+  _si_alloc_list.tail = node;
+  if (!_si_alloc_list.head) _si_alloc_list.head = node;
 
   do {
     at++;
@@ -55,10 +79,10 @@ split_t split_inplace(char* str, typeof(int(int))* predicate, bool discard_empty
 	length++;
 
 	const size_t new_size = sizeof(void*) * length;
-	if (!(_split_inplace_alloc = realloc(_split_inplace_alloc, new_size)))
+	if (!(node->strs = realloc(node->strs, new_size)))
 	  ERROR_EXPL_QUIT("split_inplace: couldn't reallocate %zu bytes", new_size);
 
-	_split_inplace_alloc[length-1] = begin;
+	node->strs[length-1] = begin;
       }
 
       *at = '\0';
@@ -69,24 +93,39 @@ split_t split_inplace(char* str, typeof(int(int))* predicate, bool discard_empty
   } while (true);
 
   const size_t new_size = sizeof(void*) * (length + 1);
-  if (!(_split_inplace_alloc = realloc(_split_inplace_alloc, new_size)))
+  if (!(node->strs = realloc(node->strs, new_size)))
     ERROR_EXPL_QUIT("split_inplace: couldn't reallocate %zu bytes for the null terminator", new_size);
-  _split_inplace_alloc[length] = nullptr;
+  node->strs[length] = nullptr;
 
   split_t product = {
-    .strs = _split_inplace_alloc,
+    .strs = node->strs,
     .length = length
   };
   return product;
 }
 
+static char _general_predicate_ref = '\0';
+static int _general_predicate(int ch) {
+  return ch == (int)_general_predicate_ref;
+}
+
+split_t split_inplace_c(char* str, char ch, bool discard_empty) {
+  _general_predicate_ref = ch;
+  return split_inplace(str, _general_predicate, discard_empty);
+}
+
 
 /* Files */
 
-static _input_allocs_t _get_input_allocs = {};
-static void _get_input_exit_callback() {
-  FREE_AND_NULLIFY(_get_input_allocs.input, free);
-  FREE_AND_NULLIFY(_get_input_allocs.file, fclose);
+typedef struct {
+  FILE* file;
+  char* input;
+} _input_alloc_t;
+
+static _input_alloc_t _gi_alloc = {};
+static void _get_input_exit_cb() {
+  FREE_AND_NULLIFY(_gi_alloc.input, free);
+  FREE_AND_NULLIFY(_gi_alloc.file, fclose);
 }
 
 static bool _get_input_is_used = false;
@@ -95,13 +134,13 @@ input_t get_input(const char* filename) {
     ERROR_QUIT("get_input: you can't use this function twice");
   _get_input_is_used = true;
   
-  if (atexit(_get_input_exit_callback) != 0)
+  if (atexit(_get_input_exit_cb) != 0)
     ERROR_QUIT("get_input: atexit registration failed");
 
-  if (!(_get_input_allocs.file = fopen(filename, "rb")))
+  if (!(_gi_alloc.file = fopen(filename, "rb")))
     ERROR_EXPL_QUIT("get_input: couldn't open input file %s", filename);
 
-  const int fd = fileno(_get_input_allocs.file);
+  const int fd = fileno(_gi_alloc.file);
   if (fd == -1)
     ERROR_EXPL_QUIT("get_input: couldn't get the file descriptor associated with %s", filename);
 
@@ -109,17 +148,17 @@ input_t get_input(const char* filename) {
   if (fstat(fd, &stat) == -1)
     ERROR_EXPL_QUIT("get_input: couldn't stat %s", filename);
 
-  if (!(_get_input_allocs.input = malloc(stat.st_size + 1)))
+  if (!(_gi_alloc.input = malloc(stat.st_size + 1)))
     ERROR_EXPL_QUIT("get_input: couldn't allocate a buffer of size %ld when processing %s", stat.st_size + 1, filename);
-  _get_input_allocs.input[stat.st_size] = '\0';
+  _gi_alloc.input[stat.st_size] = '\0';
 
   size_t fread_size = 0;
-  if ((fread_size = fread(_get_input_allocs.input, 1, stat.st_size, _get_input_allocs.file)) != (size_t)stat.st_size)
+  if ((fread_size = fread(_gi_alloc.input, 1, stat.st_size, _gi_alloc.file)) != (size_t)stat.st_size)
     ERROR_EXPL_QUIT("get_input: could only read %zu/%ld bytes when processing %s", fread_size, stat.st_size, filename);
-  FREE_AND_NULLIFY(_get_input_allocs.file, fclose);
+  FREE_AND_NULLIFY(_gi_alloc.file, fclose);
 
   input_t product = {
-    .str = _get_input_allocs.input,
+    .str = _gi_alloc.input,
     .size = stat.st_size
   };
   return product;

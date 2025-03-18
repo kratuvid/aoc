@@ -3,15 +3,12 @@
 #include "utils.h"
 
 int main() {
-  auto input = get_input("../../inputs/2017/2");
-  printf("Original: %s\n\n", input.str);
+  auto const input = get_input("../../inputs/2017/2");
+  /* printf("Original: %s\n\n", input.str); */
 
-  auto split = split_inplace(input.str, isspace, true);
-  printf("%zu splits claimed\n", split.length);
-
-  for (size_t i=0; i < split.length; i++) {
-    printf("'%s'\t", split.strs[i]);
-    if (i % 10 == 0) printf("\n");
+  auto const nl_split = split_inplace_c(input.str, '\n', true);
+  for (size_t i=0; i < nl_split.length; i++) {
+    auto const ws_split = split_inplace(nl_split.strs[i], isspace, true);
+    printf("%zu splits at line %zu\n", ws_split.length, i);
   }
-  printf("\n");
 }
