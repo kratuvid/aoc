@@ -1,5 +1,35 @@
 #include "utils.h"
 
+void trim_left(char** p_str, size_t* p_size, typeof(int(int)) *predicate) {
+  char* str = *p_str;                        // inclusive
+  const char* const end = *p_str + *p_size;  // exclusive
+
+  while (str < end && predicate(*str)) {
+    str++;
+  }
+
+  *p_str = str;
+  *p_size = end - str;
+}
+
+void trim_right(char** p_str, size_t* p_size, typeof(int(int)) *predicate) {
+  char* end = *p_str + *p_size - 1;  // inclusive
+  const char* const str = *p_str;    // inclusive
+
+  while (end >= str && predicate(*end)) {
+    end--;
+  }
+
+  end++; // now exclusive
+  *end = '\0';
+  *p_size = end - str;
+}
+
+void trim(char** p_str, size_t* p_size, typeof(int(int)) *predicate) {
+  trim_left(p_str, p_size, predicate);
+  trim_right(p_str, p_size, predicate);
+}
+
 static _input_allocs_t _get_input_allocs = {};
 static void _get_input_exit_callback() {
   FREE_AND_NULLIFY(_get_input_allocs.input, free);
