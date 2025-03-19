@@ -6,7 +6,7 @@ if(NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE "Debug")
 endif()
 set(CMAKE_COLOR_DIAGNOSTICS YES)
-set(CMAKE_CXX_COMPILER g++)
+set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_CXX_STANDARD 26)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
@@ -32,6 +32,8 @@ add_compile_options(${common_options}
 add_link_options(${common_options})
 
 ## Sources setup
-project(aoc2017 LANGUAGES CXX)
+project(aoc2018 LANGUAGES CXX)
 
-add_executable(1 1.cpp)
+add_executable(1)
+target_sources(1 PRIVATE 1.cpp)
+# target_precompile_headers(1 PRIVATE 1.hpp)
