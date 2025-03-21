@@ -22,7 +22,7 @@ endif()
 # Build type specifics
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 	add_compile_options(-D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_BACKTRACE)
-	link_libraries(stdc++exp)
+ 	link_libraries(stdc++exp)
 endif()
 
 add_compile_options(${common_options}
