@@ -7,7 +7,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 set(CMAKE_COLOR_DIAGNOSTICS YES)
 set(CMAKE_CXX_COMPILER clang++)
-set(CMAKE_CXX_STANDARD 26)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
 ## Global options
@@ -37,3 +37,5 @@ project(aoc2018 LANGUAGES CXX)
 add_executable(1)
 target_sources(1 PRIVATE 1.cpp)
 # target_precompile_headers(1 PRIVATE 1.hpp)
+
+add_executable(2 2.cpp)
